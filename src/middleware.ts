@@ -44,7 +44,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  // Resposta autenticada — força no-store pra evitar browser/CDN servir HTML stale
+  // depois que o usuário cria/edita posts (a home estava aparentando perder dados
+  // por cache da SPA navigation, mesmo com force-dynamic no server).
+  const res = NextResponse.next();
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  res.headers.set("Pragma", "no-cache");
+  return res;
 }
 
 export const config = {

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { pickCitations, getTypeMeta, markCitationUsed } from "@/lib/acervo";
 import { generatePost } from "@/lib/ai";
 import type { GenerationBrief } from "@/lib/prompts";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -97,6 +100,11 @@ export async function POST(req: Request) {
         status: "draft"
       }
     });
+
+    // Invalida cache da home e da página do post pra garantir que Router Cache
+    // do client não sirva HTML stale após navegação de volta.
+    revalidatePath("/");
+    revalidatePath(`/posts/${post.id}`);
 
     return NextResponse.json({
       postId: post.id,
