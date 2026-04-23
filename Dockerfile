@@ -14,7 +14,9 @@ COPY prisma ./prisma
 # Usa schema postgres (prod) pro generate
 RUN cp prisma/schema.postgres.prisma prisma/schema.prisma
 
-RUN npm ci --no-audit --no-fund
+# --include=dev força instalação de devDependencies mesmo com NODE_ENV=production
+# (Coolify injeta NODE_ENV=production como build ARG, o que excluiria TS/Prisma/Tailwind)
+RUN npm ci --include=dev --no-audit --no-fund
 
 # =====================================================
 # 2. builder — gera prisma client + compila Next
@@ -31,13 +33,6 @@ RUN cp prisma/schema.postgres.prisma prisma/schema.prisma
 
 # Gera prisma client antes do build
 RUN npx prisma generate
-
-# DEBUG: verifica que os arquivos críticos chegaram
-RUN echo "=== /app listing ===" && ls -la /app | head -30 \
-    && echo "=== /app/src ===" && ls -la /app/src \
-    && echo "=== /app/src/components ===" && ls -la /app/src/components \
-    && echo "=== /app/src/components/ui ===" && ls -la /app/src/components/ui \
-    && echo "=== /app/tsconfig.json ===" && cat /app/tsconfig.json
 
 # Build Next (standalone)
 ENV NEXT_TELEMETRY_DISABLED=1
