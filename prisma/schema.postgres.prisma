@@ -1,0 +1,76 @@
+// Prisma schema — PRODUÇÃO (Postgres)
+// Dev local continua usando prisma/schema.prisma (SQLite)
+// Deploy script copia este arquivo pra schema.prisma antes de prisma generate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Citation {
+  id         Int       @id @default(autoincrement())
+  type       Int
+  category   String
+  author     String
+  work       String
+  year       Int
+  page       Int
+  hasPage    Boolean   @default(false)
+  quote      String
+  translated Boolean   @default(false)
+  usedAt     DateTime?
+
+  @@index([type, category])
+  @@index([hasPage])
+  @@index([author])
+}
+
+model TypeMeta {
+  id             Int    @id @default(autoincrement())
+  type           Int    @unique
+  name           String
+  researchJson   String
+  big5Json       String
+  answerDefaults String
+}
+
+model Post {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  network    String
+  pillar     String
+  model      String
+  typeTarget Int
+  wing       Int?
+  instinct   String?
+  angle      String
+  trigger    String
+  locale     String  @default("neutral")
+  depth      String  @default("balanced")
+  userPrompt String
+
+  citationId Int?
+
+  aiProvider String
+  outputJson String
+
+  status String @default("draft")
+
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+
+  @@index([status])
+  @@index([network, pillar])
+  @@index([typeTarget])
+}
+
+model Config {
+  key   String @id
+  value String
+}

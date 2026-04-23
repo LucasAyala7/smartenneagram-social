@@ -1,0 +1,86 @@
+// Prisma schema — SmartEnneagram Social Factory
+// Dev: SQLite  |  Prod (VPS): trocar datasource provider pra "postgresql"
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Acervo de citações (seedado dos 9 type_N.json)
+model Citation {
+  id         Int      @id @default(autoincrement())
+  type       Int      // 1-9
+  category   String   // core_identity, relationships, fear, desire...
+  author     String
+  work       String
+  year       Int
+  page       Int      // 0 = sem página
+  hasPage    Boolean  @default(false)
+  quote      String
+  translated Boolean  @default(false)
+  usedAt     DateTime? // última vez que foi usada em post publicado (anti-repetição)
+
+  @@index([type, category])
+  @@index([hasPage])
+  @@index([author])
+}
+
+// Metadata de cada tipo (name, research_data, big5_correlation)
+model TypeMeta {
+  id             Int    @id @default(autoincrement())
+  type           Int    @unique
+  name           String // "The Individualist"
+  researchJson   String // JSON stringificado de research_data
+  big5Json       String // JSON stringificado de big5_correlation
+  answerDefaults String // JSON stringificado de answer_defaults
+}
+
+// Posts gerados
+model Post {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Brief
+  network         String   // instagram_feed | instagram_story | instagram_reel | linkedin_post | linkedin_article
+  pillar          String   // A, B, C, D, E, F
+  model           String   // M1..M9
+  typeTarget      Int      // 1-9
+  wing            Int?     // wing (ex: 3 pra 4w3)
+  instinct        String?  // SP, SX, SO
+  angle           String   // work | relationships | self_discovery | stress | growth | celebrities
+  trigger         String   // curiosity | identification | validation | provocation | humor
+  locale          String   @default("neutral") // neutral | US | UK | CA | AU
+  depth           String   @default("balanced") // pop | balanced | scholar
+  userPrompt      String   // brief da Samara (opcional)
+
+  // Citação escolhida (se houver)
+  citationId      Int?
+
+  // IA usada
+  aiProvider      String   // claude | gpt | hybrid
+
+  // Output (JSON estruturado)
+  outputJson      String   // { hook, insight, citation, reflection, cta, hashtags, altText, imagePrompts[], layoutJson, ptTranslation }
+
+  // Status workflow
+  status          String   @default("draft") // draft | ready | approved | scheduled | published
+
+  // Agendamento
+  scheduledFor    DateTime?
+  publishedAt     DateTime?
+
+  @@index([status])
+  @@index([network, pillar])
+  @@index([typeTarget])
+}
+
+// Config de runtime (chaves IA editáveis pela /admin/config)
+model Config {
+  key   String @id
+  value String
+}

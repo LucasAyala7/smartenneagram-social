@@ -1,0 +1,18 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.production
+*.db
+*.db-journal
+dev.db
+prisma/dev.db
+prisma/dev_snapshot.db
+.DS_Store
+
+# debug scripts temporários
+scripts/debug_auth.ts
+
+# logs PM2
+logs/
