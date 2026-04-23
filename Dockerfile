@@ -71,6 +71,18 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 
+# Binários (.bin contém symlinks pra prisma, tsx, next, etc.)
+# Sem isso, `./node_modules/.bin/prisma` não existe no runner
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
+
+# Deps que tsx precisa em runtime (pra rodar o seed.ts)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/get-tsconfig ./node_modules/get-tsconfig
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/resolve-pkg-maps ./node_modules/resolve-pkg-maps
+
+# package.json no runner (prisma CLI lê pra encontrar schema)
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
 # Entrypoint aplica schema + seed na 1ª subida (idempotente)
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x docker-entrypoint.sh
