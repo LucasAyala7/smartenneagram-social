@@ -32,6 +32,13 @@ RUN cp prisma/schema.postgres.prisma prisma/schema.prisma
 # Gera prisma client antes do build
 RUN npx prisma generate
 
+# DEBUG: verifica que os arquivos críticos chegaram
+RUN echo "=== /app listing ===" && ls -la /app | head -30 \
+    && echo "=== /app/src ===" && ls -la /app/src \
+    && echo "=== /app/src/components ===" && ls -la /app/src/components \
+    && echo "=== /app/src/components/ui ===" && ls -la /app/src/components/ui \
+    && echo "=== /app/tsconfig.json ===" && cat /app/tsconfig.json
+
 # Build Next (standalone)
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
