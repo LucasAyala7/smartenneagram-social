@@ -40,12 +40,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   >
                     Novo
                   </Link>
-                  <Link
-                    href="/playbook"
-                    className="px-3 py-1.5 rounded-md hover:bg-accent hover:text-accent-foreground"
-                  >
-                    Playbook
-                  </Link>
                   {user.role === "admin" && (
                     <Link
                       href="/admin/config"
