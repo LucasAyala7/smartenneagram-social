@@ -27,24 +27,104 @@ async function clients() {
   };
 }
 
+// Modelos com muitas slides/seções precisam de mais tokens de saída.
+// JSON com 10 slides + layout + ptTranslation completa pode passar de 6k tokens.
+function maxTokensFor(model: string): number {
+  if (model === "M3" || model === "M7") return 12000; // carrossel
+  if (model === "M8") return 8000; // reel com script timed
+  if (model === "M9") return 6000; // data viz com layoutJson grande
+  return 6000; // demais modelos (single-image)
+}
+
 function parseJson(raw: string): any {
-  // IA às vezes embrulha em ```json ... ```
-  const stripped = raw
+  if (!raw || !raw.trim()) {
+    throw new Error("AI retornou resposta vazia. Tente regenerar.");
+  }
+
+  // 1. tira fences markdown se houver
+  let s = raw
     .replace(/^```(?:json)?\s*/i, "")
     .replace(/```\s*$/i, "")
     .trim();
+
+  // 2. tenta direto
   try {
-    return JSON.parse(stripped);
-  } catch {
-    // Última tentativa: extrair primeiro {...} balanceado
-    const match = stripped.match(/\{[\s\S]*\}/);
-    if (match) {
-      try {
-        return JSON.parse(match[0]);
-      } catch {}
-    }
-    throw new Error("Failed to parse JSON from AI response");
+    return JSON.parse(s);
+  } catch {}
+
+  // 3. tenta extrair primeiro objeto {...} balanceado
+  const firstBrace = s.indexOf("{");
+  const lastBrace = s.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    const candidate = s.slice(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(candidate);
+    } catch {}
   }
+
+  // 4. fallback: se truncou no meio (max_tokens estourado), tentar reparar
+  // fechando aspas/colchetes/chaves abertos. É best-effort.
+  try {
+    return JSON.parse(repairJson(s));
+  } catch {}
+
+  // 5. desisto — erro com info útil
+  const preview = s.slice(0, 200).replace(/\n/g, " ");
+  const tail = s.slice(-200).replace(/\n/g, " ");
+  console.error("[ai parseJson] falhou. raw length:", s.length);
+  console.error("[ai parseJson] início:", preview);
+  console.error("[ai parseJson] final:", tail);
+  throw new Error(
+    `JSON inválido (${s.length} chars). Tente regenerar — pode ter sido truncamento. ` +
+    `Início: "${preview.slice(0, 80)}..."`
+  );
+}
+
+// Best-effort: fecha chaves/colchetes abertos e remove vírgula trailing
+// pra resgatar JSON truncado por max_tokens.
+function repairJson(s: string): string {
+  let out = s;
+  // Remove tudo após o último colon válido sem valor + corta cauda quebrada
+  // Estratégia simples: contar { vs }, [ vs ], aspas
+  const stack: string[] = [];
+  let inString = false;
+  let escaped = false;
+  let lastValidIdx = -1;
+  for (let i = 0; i < out.length; i++) {
+    const c = out[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (c === "\\" && inString) {
+      escaped = true;
+      continue;
+    }
+    if (c === '"') {
+      inString = !inString;
+      if (!inString) lastValidIdx = i;
+      continue;
+    }
+    if (inString) continue;
+    if (c === "{" || c === "[") stack.push(c);
+    if (c === "}" || c === "]") {
+      stack.pop();
+      lastValidIdx = i;
+    }
+    if (c === "," || c === ":") {
+      // marca último delimiter como ponto seguro
+    }
+  }
+  // Se string aberta, fecha
+  if (inString) out += '"';
+  // Remove vírgula trailing (se cortou no meio de array/object)
+  out = out.replace(/,\s*$/, "");
+  // Fecha colchetes/chaves abertos
+  while (stack.length) {
+    const open = stack.pop();
+    out += open === "{" ? "}" : "]";
+  }
+  return out;
 }
 
 async function runClaude(brief: GenerationBrief): Promise<GenerationResult> {
@@ -53,7 +133,7 @@ async function runClaude(brief: GenerationBrief): Promise<GenerationResult> {
 
   const res = await anthropic.messages.create({
     model: claudeModel,
-    max_tokens: 4096,
+    max_tokens: maxTokensFor(brief.model),
     system: buildSystemPrompt({
       typeTarget: brief.typeTarget,
       model: brief.model as any,
@@ -66,6 +146,13 @@ async function runClaude(brief: GenerationBrief): Promise<GenerationResult> {
     .filter((c: any) => c.type === "text")
     .map((c: any) => c.text)
     .join("\n");
+
+  // Detecta truncamento explícito
+  if (res.stop_reason === "max_tokens") {
+    console.warn(
+      `[ai claude] truncado por max_tokens (model=${brief.model}, max=${maxTokensFor(brief.model)})`
+    );
+  }
 
   return {
     provider: "claude",
@@ -83,7 +170,7 @@ async function runGpt(brief: GenerationBrief): Promise<GenerationResult> {
   const res = await openai.chat.completions.create({
     model: gptModel,
     response_format: { type: "json_object" },
-    max_tokens: 4096,
+    max_tokens: maxTokensFor(brief.model),
     messages: [
       {
         role: "system",
@@ -98,6 +185,12 @@ async function runGpt(brief: GenerationBrief): Promise<GenerationResult> {
   });
 
   const raw = res.choices[0]?.message?.content || "";
+  if (res.choices[0]?.finish_reason === "length") {
+    console.warn(
+      `[ai gpt] truncado por max_tokens (model=${brief.model}, max=${maxTokensFor(brief.model)})`
+    );
+  }
+
   return {
     provider: "gpt",
     raw,
@@ -111,8 +204,14 @@ async function runGpt(brief: GenerationBrief): Promise<GenerationResult> {
 async function runHybrid(brief: GenerationBrief): Promise<GenerationResult> {
   const claude = await runClaude(brief);
 
+  // Pra carrossel (M3/M7) o JSON é grande demais pra fazer round-trip via GPT
+  // (custo e risco de truncar). Pula a etapa de refino híbrido.
+  if (brief.model === "M3" || brief.model === "M7") {
+    return { ...claude, provider: "hybrid" };
+  }
+
   const { openai, gptModel } = await clients();
-  if (!openai) return { ...claude, provider: "hybrid" }; // fallback
+  if (!openai) return { ...claude, provider: "hybrid" };
 
   const refinePrompt = `You are a punchy social copywriter. Below is a post draft in JSON. Rewrite ONLY the "hook" and "cta" fields to be more scroll-stopping and punchy for ${brief.network}. Keep everything else (insight, citation, reflection, hashtags, altText, imagePrompts, layoutJson, ptTranslation, compliance) EXACTLY as is. Return the full JSON with only hook and cta changed.
 
@@ -123,7 +222,7 @@ ${claude.raw}`;
     const res = await openai.chat.completions.create({
       model: gptModel,
       response_format: { type: "json_object" },
-      max_tokens: 4096,
+      max_tokens: maxTokensFor(brief.model),
       messages: [
         { role: "system", content: "Return valid JSON only. No prose." },
         { role: "user", content: refinePrompt }
