@@ -28,7 +28,8 @@ const SECTIONS: Section[] = [
   { id: "dicas", title: "13. Dicas de ouro" },
   { id: "nao-fazer", title: "14. O que NÃO fazer" },
   { id: "faq", title: "15. FAQ" },
-  { id: "leituras", title: "16. Leituras recomendadas" }
+  { id: "leituras", title: "16. Leituras recomendadas" },
+  { id: "brand", title: "17. Brand — logo, cores, tipografia" }
 ];
 
 export function PlaybookContent() {
@@ -41,6 +42,20 @@ export function PlaybookContent() {
       if (raw) setDone(JSON.parse(raw));
     } catch {}
     setReady(true);
+
+    // Carrega fontes do brand (DM Sans, DM Serif Display, JetBrains Mono)
+    // só quando entra na página /playbook — sem afetar o resto do app
+    if (typeof document !== "undefined") {
+      const id = "se-brand-fonts";
+      if (!document.getElementById(id)) {
+        const link = document.createElement("link");
+        link.id = id;
+        link.rel = "stylesheet";
+        link.href =
+          "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap";
+        document.head.appendChild(link);
+      }
+    }
   }, []);
 
   function toggle(id: string) {
@@ -1104,5 +1119,447 @@ const SECTION_BODIES: Record<string, React.ReactNode> = {
         <li>Semana 8: revise, retome posts que criou pra reavaliar</li>
       </ol>
     </>
-  )
+  ),
+
+  brand: <BrandSection />
 };
+
+function BrandSection() {
+  return (
+    <>
+      <p>
+        A identidade visual do SmartEnneagram. Use exatamente o que está aqui — não invente
+        cores ou fontes. Quando for criar um post no Canva, comece sempre destes 3 elementos:
+        logo + paleta + tipografia.
+      </p>
+
+      {/* ============== LOGOS ============== */}
+      <h3>Logos</h3>
+      <div className="not-prose grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+        {/* Quadrada (favicon) */}
+        <div className="border rounded-lg overflow-hidden bg-background">
+          <div
+            className="aspect-square flex items-center justify-center p-6"
+            style={{ background: "linear-gradient(135deg,#3d8b40,#245828)" }}
+          >
+            <img
+              src="/brand/logo-square.svg"
+              alt="Logo quadrada SmartEnneagram"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="p-3 text-xs space-y-2">
+            <div className="font-semibold">Logo quadrada</div>
+            <div className="text-muted-foreground">
+              Pra avatar de Instagram/LinkedIn, ícone, badge.
+            </div>
+            <div className="flex gap-2">
+              <a
+                href="/brand/logo-square.svg"
+                download
+                className="inline-flex items-center px-2 py-1 rounded border text-xs hover:bg-accent"
+              >
+                ⬇ SVG
+              </a>
+              <a
+                href="/brand/logo-square-512.png"
+                download
+                className="inline-flex items-center px-2 py-1 rounded border text-xs hover:bg-accent"
+              >
+                ⬇ PNG 512
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Marca (verde com gradient) */}
+        <div className="border rounded-lg overflow-hidden bg-background">
+          <div className="aspect-square flex items-center justify-center p-6 bg-white">
+            <img
+              src="/brand/logo.svg"
+              alt="Logo SmartEnneagram (verde)"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="p-3 text-xs space-y-2">
+            <div className="font-semibold">Logo principal (verde)</div>
+            <div className="text-muted-foreground">
+              Pra fundo branco/claro. Carrosséis, headers, post finais.
+            </div>
+            <div className="flex gap-2">
+              <a
+                href="/brand/logo.svg"
+                download
+                className="inline-flex items-center px-2 py-1 rounded border text-xs hover:bg-accent"
+              >
+                ⬇ SVG
+              </a>
+              <a
+                href="/brand/logo.png"
+                download
+                className="inline-flex items-center px-2 py-1 rounded border text-xs hover:bg-accent"
+              >
+                ⬇ PNG
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Marca branca (pra fundo escuro) */}
+        <div className="border rounded-lg overflow-hidden bg-background">
+          <div
+            className="aspect-square flex items-center justify-center p-6"
+            style={{ background: "#141f14" }}
+          >
+            <img
+              src="/brand/logo-white.svg"
+              alt="Logo SmartEnneagram branca"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="p-3 text-xs space-y-2">
+            <div className="font-semibold">Logo branca</div>
+            <div className="text-muted-foreground">
+              Pra fundo escuro/foto cinematográfica. M1 com gradient overlay, M5 noturno.
+            </div>
+            <div className="flex gap-2">
+              <a
+                href="/brand/logo-white.svg"
+                download
+                className="inline-flex items-center px-2 py-1 rounded border text-xs hover:bg-accent"
+              >
+                ⬇ SVG
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h4 className="font-semibold mt-6 mb-2">⚠️ Regras de uso da logo</h4>
+      <ul className="text-sm">
+        <li>Mantenha sempre uma <strong>margem mínima</strong> em volta da logo igual à altura da letra "S"</li>
+        <li><strong>Nunca</strong> distorça (não estica/encolhe horizontalmente — só escala proporcional)</li>
+        <li><strong>Nunca</strong> mude a cor (use a versão branca pra fundo escuro, verde pra fundo claro)</li>
+        <li><strong>Nunca</strong> coloque logo verde sobre fundo verde — sem contraste</li>
+        <li>Tamanho mínimo: <strong>40px de altura</strong> em telas (legibilidade)</li>
+      </ul>
+
+      {/* ============== CORES ============== */}
+      <h3>Paleta de cores</h3>
+      <p className="text-sm text-muted-foreground">
+        Clique em qualquer swatch pra copiar o código hex pro clipboard.
+      </p>
+
+      <h4 className="font-semibold mt-4 mb-2">Verdes (assinatura da marca)</h4>
+      <div className="not-prose grid grid-cols-2 md:grid-cols-4 gap-3 my-3">
+        <ColorSwatch name="Green" hex="#2e7032" desc="Primary — texto/UI" />
+        <ColorSwatch name="Green Dark" hex="#245828" desc="Hover, profundidade" />
+        <ColorSwatch name="Green Light" hex="#3d8b40" desc="Acento, hover claro" />
+        <ColorSwatch
+          name="Green Gradient"
+          hex="#3d8b40 → #245828"
+          desc="Backgrounds dramáticos, badges"
+          gradient
+        />
+      </div>
+
+      <h4 className="font-semibold mt-4 mb-2">Acentos (uso pontual)</h4>
+      <div className="not-prose grid grid-cols-3 gap-3 my-3">
+        <ColorSwatch name="Teal" hex="#187a62" desc="Info, dados, citação alt" />
+        <ColorSwatch name="Rose" hex="#b93020" desc="Alerta, mito (pilar D)" />
+        <ColorSwatch name="Amber" hex="#c87800" desc="Atenção, highlight" />
+      </div>
+
+      <h4 className="font-semibold mt-4 mb-2">Neutros (textos e fundos)</h4>
+      <div className="not-prose grid grid-cols-3 md:grid-cols-6 gap-3 my-3">
+        <ColorSwatch name="Void" hex="#f6f8f4" desc="BG mais leve" />
+        <ColorSwatch name="Deep" hex="#eef2ea" desc="BG seção" />
+        <ColorSwatch name="Raised" hex="#eff4ec" desc="Card sobre void" />
+        <ColorSwatch name="Hover" hex="#e5ede0" desc="Hover claro" />
+        <ColorSwatch name="Base" hex="#ffffff" desc="Branco puro (M5)" />
+        <ColorSwatch name="Txt" hex="#141f14" desc="Texto principal" />
+      </div>
+
+      <h4 className="font-semibold mt-6 mb-2">Onde usar cada cor</h4>
+      <div className="not-prose text-sm">
+        <table className="w-full border-collapse">
+          <thead className="bg-muted">
+            <tr>
+              <th className="text-left p-2 border">Contexto</th>
+              <th className="text-left p-2 border">Cor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ["Logo + headlines de capa", "Green / Green Dark"],
+              ["CTA / botões / link bio", "Green Light"],
+              ["Backgrounds dramáticos (M1)", "Green Gradient + foto overlay"],
+              ["Texto principal (corpo)", "Txt #141f14 sobre Void/Base"],
+              ["Card de citação (M5)", "Base #fff sobre textura paper"],
+              ["Pilar D (myth-busting)", "Rose pro mito + Green pro fato"],
+              ["Pilar F (dados/big5)", "Teal pra gráficos"],
+              ["Highlight pontual", "Amber"]
+            ].map(([ctx, cor]) => (
+              <tr key={ctx} className="border-t">
+                <td className="p-2 border">{ctx}</td>
+                <td className="p-2 border font-mono text-xs">{cor}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ============== TIPOGRAFIA ============== */}
+      <h3>Tipografia</h3>
+      <p>
+        Três fontes (Google Fonts, gratuitas). Baixe e instale no seu Canva/PC pra ter
+        consistência total com o site oficial.
+      </p>
+
+      <div className="not-prose grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+        {/* DM Serif Display */}
+        <div className="border rounded-lg p-5 bg-background">
+          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+            Headlines / Display
+          </div>
+          <div
+            className="text-4xl mb-2"
+            style={{ fontFamily: '"DM Serif Display", serif' }}
+          >
+            Aa Bb Cc
+          </div>
+          <div
+            className="text-2xl italic mb-3"
+            style={{ fontFamily: '"DM Serif Display", serif' }}
+          >
+            Reasons you feel empty.
+          </div>
+          <div className="text-sm font-semibold">DM Serif Display</div>
+          <div className="text-xs text-muted-foreground mb-3">Regular + Italic</div>
+          <a
+            href="https://fonts.google.com/specimen/DM+Serif+Display"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline"
+          >
+            ⬇ baixar no Google Fonts
+          </a>
+          <p className="text-xs text-muted-foreground mt-3">
+            Use em: M1 headlines, M2 manchete, M5 citação, capa de carrossel, qualquer título grande.
+          </p>
+        </div>
+
+        {/* DM Sans */}
+        <div className="border rounded-lg p-5 bg-background">
+          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+            Corpo / UI
+          </div>
+          <div
+            className="text-4xl mb-2"
+            style={{ fontFamily: '"DM Sans", sans-serif', fontWeight: 700 }}
+          >
+            Aa Bb Cc
+          </div>
+          <div
+            className="text-base mb-3 leading-relaxed"
+            style={{ fontFamily: '"DM Sans", sans-serif' }}
+          >
+            For Fours, the experience of feeling not-quite-right is a daily companion.
+          </div>
+          <div className="text-sm font-semibold">DM Sans</div>
+          <div className="text-xs text-muted-foreground mb-3">300, 400, 500, 600, 700</div>
+          <a
+            href="https://fonts.google.com/specimen/DM+Sans"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline"
+          >
+            ⬇ baixar no Google Fonts
+          </a>
+          <p className="text-xs text-muted-foreground mt-3">
+            Use em: corpo de texto, UI, hashtags, CTAs, alt-text, qualquer parágrafo.
+          </p>
+        </div>
+
+        {/* JetBrains Mono */}
+        <div className="border rounded-lg p-5 bg-background">
+          <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+            Mono / Atribuição
+          </div>
+          <div
+            className="text-4xl mb-2"
+            style={{ fontFamily: '"JetBrains Mono", monospace' }}
+          >
+            Aa Bb Cc
+          </div>
+          <div
+            className="text-xs uppercase tracking-widest mb-3"
+            style={{ fontFamily: '"JetBrains Mono", monospace', letterSpacing: "0.15em" }}
+          >
+            RISO &amp; HUDSON · 1996 · P.157
+          </div>
+          <div className="text-sm font-semibold">JetBrains Mono</div>
+          <div className="text-xs text-muted-foreground mb-3">400, 500</div>
+          <a
+            href="https://fonts.google.com/specimen/JetBrains+Mono"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline"
+          >
+            ⬇ baixar no Google Fonts
+          </a>
+          <p className="text-xs text-muted-foreground mt-3">
+            Use em: atribuição de citação ("AUTOR · OBRA · ANO · PÁG"), labels técnicos, dados em M9.
+          </p>
+        </div>
+      </div>
+
+      <h4 className="font-semibold mt-6 mb-2">Hierarquia tipográfica recomendada</h4>
+      <div className="not-prose text-sm">
+        <table className="w-full border-collapse">
+          <thead className="bg-muted">
+            <tr>
+              <th className="text-left p-2 border">Nível</th>
+              <th className="text-left p-2 border">Fonte</th>
+              <th className="text-left p-2 border">Tamanho típico</th>
+              <th className="text-left p-2 border">Peso</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ["Headline grande (capa)", "DM Serif Display", "72-84pt", "Regular"],
+              ["Headline citação (M5)", "DM Serif Display Italic", "48-60pt", "Italic"],
+              ["Subtítulo", "DM Sans", "24-32pt", "Bold (700)"],
+              ["Corpo", "DM Sans", "16-20pt", "Regular (400)"],
+              ["Caption pequena", "DM Sans", "14pt", "Medium (500)"],
+              ["Atribuição (citação)", "JetBrains Mono", "11-13pt", "Regular CAPS + letter-spacing"]
+            ].map((row) => (
+              <tr key={row[0]} className="border-t">
+                {row.map((c, i) => (
+                  <td key={i} className="p-2 border">
+                    {c}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ============== CORE / TOM VISUAL ============== */}
+      <h3>Core visual — o que faz um post parecer "SmartEnneagram"</h3>
+      <ul>
+        <li>
+          <strong>Fotografia cinematográfica</strong>, não estoque genérico. Iluminação natural
+          (janela, golden hour), profundidade de campo, pessoa em momento contemplativo.
+        </li>
+        <li>
+          <strong>Paleta dessaturada</strong> com pontos de verde-marca. Evite cores saturadas
+          tipo "feed de Instagram-fitness".
+        </li>
+        <li>
+          <strong>Tipografia generosa</strong>. Espaço em branco é design. Não enche o card.
+        </li>
+        <li>
+          <strong>Citação sempre presente.</strong> Se um post não cita, não é nosso.
+        </li>
+        <li>
+          <strong>Atribuição em mono CAPS.</strong> Visualmente diferencia do corpo do texto e
+          dá ar acadêmico.
+        </li>
+      </ul>
+
+      <h4 className="font-semibold mt-4 mb-2">Mood (uma linha)</h4>
+      <blockquote>
+        <em>
+          Uma editora literária com selo psicológico. Kinfolk meets New Yorker meets terapia.
+          Densidade sem peso. Autoridade sem rigidez.
+        </em>
+      </blockquote>
+
+      <h4 className="font-semibold mt-6 mb-2">Inspirações (referências externas)</h4>
+      <ul className="text-sm">
+        <li>Penguin Classics (livros) — tipografia + textura paper</li>
+        <li>The New Yorker — densidade + ilustração</li>
+        <li>Kinfolk Magazine — fotografia cinematográfica + neutros</li>
+        <li>A24 (filmes) — paleta de cor cinematográfica</li>
+        <li>Wong Kar-wai — color grading saudosa, melancólica</li>
+      </ul>
+
+      <h4 className="font-semibold mt-6 mb-2">Pasta de assets local pra você</h4>
+      <p className="text-sm">
+        Todos os arquivos de logo estão em <code>/brand/</code> aqui no app. Os PNGs servem direto
+        pro Canva. Os SVGs servem pro designer ou pra Nano Banana se quiser embutir logo na
+        composição.
+      </p>
+      <ul className="text-sm">
+        <li>
+          <a href="/brand/logo.svg" download className="text-primary hover:underline">
+            ⬇ logo.svg
+          </a>{" "}
+          — versão verde principal (vetor, escala infinita)
+        </li>
+        <li>
+          <a href="/brand/logo-white.svg" download className="text-primary hover:underline">
+            ⬇ logo-white.svg
+          </a>{" "}
+          — versão branca pra fundo escuro
+        </li>
+        <li>
+          <a href="/brand/logo-square.svg" download className="text-primary hover:underline">
+            ⬇ logo-square.svg
+          </a>{" "}
+          — quadrado (avatar IG/LinkedIn)
+        </li>
+        <li>
+          <a href="/brand/logo-square-512.png" download className="text-primary hover:underline">
+            ⬇ logo-square-512.png
+          </a>{" "}
+          — PNG 512×512 pra Canva/perfil de rede
+        </li>
+        <li>
+          <a href="/brand/logo.png" download className="text-primary hover:underline">
+            ⬇ logo.png
+          </a>{" "}
+          — PNG da logo principal
+        </li>
+      </ul>
+    </>
+  );
+}
+
+function ColorSwatch({
+  name,
+  hex,
+  desc,
+  gradient
+}: {
+  name: string;
+  hex: string;
+  desc: string;
+  gradient?: boolean;
+}) {
+  const swatchStyle = gradient
+    ? { background: "linear-gradient(135deg,#3d8b40,#245828)" }
+    : { background: hex.split(" ")[0] };
+
+  function copy() {
+    if (typeof navigator === "undefined") return;
+    navigator.clipboard.writeText(hex);
+  }
+
+  return (
+    <button
+      onClick={copy}
+      className="text-left border rounded-lg overflow-hidden bg-background hover:border-primary transition-colors"
+      title="Clique pra copiar"
+    >
+      <div className="h-16" style={swatchStyle} />
+      <div className="p-3">
+        <div className="text-sm font-semibold">{name}</div>
+        <div className="text-xs font-mono text-muted-foreground">{hex}</div>
+        <div className="text-xs text-muted-foreground mt-1">{desc}</div>
+      </div>
+    </button>
+  );
+}
